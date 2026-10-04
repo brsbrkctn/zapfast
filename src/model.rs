@@ -882,6 +882,72 @@ fn with_caption(label: &str, caption: &Option<String>) -> String {
     }
 }
 
+/// Translates message summary labels (e.g. "Photo", "Video", "Voice message",
+/// etc.) into the reader's language. If the summary carries a caption or detail,
+/// the label prefix is translated while the rest is preserved.
+pub fn localize_summary(locale: crate::i18n::Locale, summary: &str) -> String {
+    use crate::i18n::gettext;
+    if summary.is_empty() {
+        return String::new();
+    }
+    match summary {
+        "Photo" => return gettext(locale, "Photo").into_owned(),
+        "Video" => return gettext(locale, "Video").into_owned(),
+        "GIF" => return "GIF".to_owned(),
+        "Video message" => return gettext(locale, "Video message").into_owned(),
+        "Voice message" => return gettext(locale, "Voice message").into_owned(),
+        "Audio" => return gettext(locale, "Audio").into_owned(),
+        "Sticker" => return gettext(locale, "Sticker").into_owned(),
+        "Location" => return gettext(locale, "Location").into_owned(),
+        "Live location" => return gettext(locale, "Live location").into_owned(),
+        "Live location ended" => return gettext(locale, "Live location ended").into_owned(),
+        "This message was deleted" => return gettext(locale, "This message was deleted").into_owned(),
+        "View once photo" => return gettext(locale, "View once photo").into_owned(),
+        "View once video" => return gettext(locale, "View once video").into_owned(),
+        "View once voice message" => return gettext(locale, "View once voice message").into_owned(),
+        "View once audio" => return gettext(locale, "View once audio").into_owned(),
+        "View once message" => return gettext(locale, "View once message").into_owned(),
+        "Message on your phone" => return gettext(locale, "Message on your phone").into_owned(),
+        _ => {}
+    }
+
+    if let Some((prefix, rest)) = summary.split_once(": ") {
+        let translated = match prefix {
+            "Photo" => Some(gettext(locale, "Photo")),
+            "Video" => Some(gettext(locale, "Video")),
+            "GIF" => Some(std::borrow::Cow::Borrowed("GIF")),
+            "Video message" => Some(gettext(locale, "Video message")),
+            "Document" => Some(gettext(locale, "Document")),
+            "Sticker pack" => Some(gettext(locale, "Sticker pack")),
+            "Location" => Some(gettext(locale, "Location")),
+            "Contact" => Some(gettext(locale, "Contact")),
+            "Poll" => Some(gettext(locale, "Poll")),
+            _ => None,
+        };
+        if let Some(label) = translated {
+            return format!("{label}: {rest}");
+        }
+    }
+
+    if let Some(rest) = summary.strip_prefix("Voice message (") {
+        if rest.ends_with(')') {
+            return format!("{} ({rest}", gettext(locale, "Voice message"));
+        }
+    }
+    if let Some(rest) = summary.strip_prefix("Audio (") {
+        if rest.ends_with(')') {
+            return format!("{} ({rest}", gettext(locale, "Audio"));
+        }
+    }
+    if let Some(rest) = summary.strip_prefix("Unsupported message (") {
+        if rest.ends_with(')') {
+            return format!("{} ({rest}", gettext(locale, "Unsupported message"));
+        }
+    }
+
+    summary.to_owned()
+}
+
 /// Maximum size accepted for a downloaded attachment.
 pub(crate) const ATTACHMENT_DOWNLOAD_LIMIT: u64 = 64 * 1024 * 1024;
 

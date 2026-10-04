@@ -2003,13 +2003,18 @@ impl App {
         out
     }
 
+    /// Localizes preview summary labels into the current interface language.
+    pub fn localize_summary(&self, summary: &str) -> String {
+        crate::model::localize_summary(self.locale, summary)
+    }
+
     /// One-line plain-text message summary with resolved mentions.
     pub fn message_text(&self, message: &Message) -> String {
         match &message.content {
             Content::Text { text, .. } | Content::Interactive { text, .. } => {
                 crate::markup::plain(text, &self.mention_list(message))
             }
-            _ => self.preview_line(&message.summary(), message),
+            _ => self.preview_line(&self.localize_summary(&message.summary()), message),
         }
     }
 

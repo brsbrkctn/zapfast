@@ -957,12 +957,13 @@ fn keyed(text: Text) -> Text {
 fn theme_picker(ui: &mut egui::Ui, app: &mut App) {
     let palette = app.palette;
     ui.with_layout(egui::Layout::top_down(egui::Align::Max), |ui| {
+        let choice_label = |choice: ThemeChoice| crate::i18n::gettext(app.locale, choice.label());
         let selected = app
             .settings
             .custom_theme
             .as_deref()
             .map(fastframe_theme::display_name)
-            .unwrap_or_else(|| app.settings.theme.label());
+            .unwrap_or_else(|| choice_label(app.settings.theme).into_owned());
         let response = egui::ComboBox::from_id_salt("appearance_theme")
             .selected_text(" ")
             .width(200.0_f32.min(ui.available_width()))
@@ -972,7 +973,7 @@ fn theme_picker(ui: &mut egui::Ui, app: &mut App) {
                     if theme_option(
                         ui,
                         &palette,
-                        choice.label(),
+                        choice_label(choice).as_ref(),
                         app.settings.custom_theme.is_none() && app.settings.theme == choice,
                     ) {
                         app.actions.push(Action::SetTheme(choice));
@@ -997,7 +998,7 @@ fn theme_picker(ui: &mut egui::Ui, app: &mut App) {
         let rect = response.response.rect;
         let text = widgets::line(
             ui,
-            selected,
+            &selected,
             theme::regular(14.0),
             palette.text,
             rect.width() - 36.0,
@@ -1018,7 +1019,7 @@ fn theme_picker(ui: &mut egui::Ui, app: &mut App) {
             ui,
             &palette,
             Some(Icon::ExternalLink),
-            "Open themes folder",
+            &crate::i18n::gettext(app.locale, "Open themes folder"),
             false,
         )
         .clicked()
