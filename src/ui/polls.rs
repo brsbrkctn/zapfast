@@ -177,6 +177,7 @@ pub fn create(app: &mut App, ui: &mut egui::Ui, chat: &str) {
     });
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn ballot(
     ui: &mut egui::Ui,
     palette: &Palette,
