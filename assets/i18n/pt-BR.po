@@ -1273,7 +1273,7 @@ msgstr "Recentes"
 
 #: src/ui/picker.rs:1202
 msgid "Received"
-msgstr "Recebido"
+msgstr "Recebidas"
 
 #: src/ui/picker.rs:1203
 msgid "Add stickers"

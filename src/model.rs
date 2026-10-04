@@ -901,10 +901,14 @@ pub fn localize_summary(locale: crate::i18n::Locale, summary: &str) -> String {
         "Location" => return gettext(locale, "Location").into_owned(),
         "Live location" => return gettext(locale, "Live location").into_owned(),
         "Live location ended" => return gettext(locale, "Live location ended").into_owned(),
-        "This message was deleted" => return gettext(locale, "This message was deleted").into_owned(),
+        "This message was deleted" => {
+            return gettext(locale, "This message was deleted").into_owned();
+        }
         "View once photo" => return gettext(locale, "View once photo").into_owned(),
         "View once video" => return gettext(locale, "View once video").into_owned(),
-        "View once voice message" => return gettext(locale, "View once voice message").into_owned(),
+        "View once voice message" => {
+            return gettext(locale, "View once voice message").into_owned();
+        }
         "View once audio" => return gettext(locale, "View once audio").into_owned(),
         "View once message" => return gettext(locale, "View once message").into_owned(),
         "Message on your phone" => return gettext(locale, "Message on your phone").into_owned(),

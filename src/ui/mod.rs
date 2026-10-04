@@ -231,11 +231,8 @@ fn drop_target(app: &mut App, ctx: &egui::Context) {
                         theme::icon(ui, Icon::Paperclip, 28.0, palette.accent);
                         theme::text(
                             ui,
-                            fastframe_i18n::gettext!(
-                                app.locale,
-                                "Drop to send to {name}",
-                                name = name
-                            ),
+                            crate::i18n::gettext(app.locale, "Drop to send to {name}")
+                                .replace("{name}", name),
                             theme::semibold(15.0),
                             palette.text,
                         );
@@ -253,11 +250,8 @@ fn banner(app: &mut App, ui: &mut egui::Ui) {
         LinkStatus::Connected if app.syncing => (
             Icon::Refresh,
             match app.sync_percent {
-                Some(percent) => fastframe_i18n::gettext!(
-                    locale,
-                    "Loading chat history… {percent}%",
-                    percent = percent
-                ),
+                Some(percent) => crate::i18n::gettext(locale, "Loading chat history… {percent}%")
+                    .replace("{percent}", &percent.to_string()),
                 None => crate::i18n::gettext(locale, "Loading chat history…").into_owned(),
             },
             palette.accent,
@@ -268,11 +262,8 @@ fn banner(app: &mut App, ui: &mut egui::Ui) {
             let update = update.as_ref().expect("checked above");
             (
                 Icon::Info,
-                fastframe_i18n::gettext!(
-                    locale,
-                    "ZapFast {version} is available",
-                    version = update.version
-                ),
+                crate::i18n::gettext(locale, "ZapFast {version} is available")
+                    .replace("{version}", &update.version.to_string()),
                 palette.accent,
                 false,
                 Some(update.url.clone()),
@@ -288,11 +279,8 @@ fn banner(app: &mut App, ui: &mut egui::Ui) {
         ),
         LinkStatus::Disconnected { reason } => (
             Icon::WifiOff,
-            fastframe_i18n::gettext!(
-                locale,
-                "Offline ({reason}). Reconnecting…",
-                reason = reason
-            ),
+            crate::i18n::gettext(locale, "Offline ({reason}). Reconnecting…")
+                .replace("{reason}", reason),
             palette.warning,
             true,
             None,

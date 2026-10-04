@@ -1539,12 +1539,7 @@ fn context_menu(app: &mut App, ui: &mut egui::Ui, chat: &Chat, palette: &Palette
     } else {
         crate::i18n::gettext(locale, "Archive")
     };
-    if widgets::menu_item(
-        ui,
-        palette,
-        Some(Icon::Archive),
-        archive_label.as_ref(),
-    ) {
+    if widgets::menu_item(ui, palette, Some(Icon::Archive), archive_label.as_ref()) {
         app.actions
             .push(Action::SetArchived(chat.id.clone(), !chat.archived));
     }
@@ -1564,13 +1559,24 @@ fn context_menu(app: &mut App, ui: &mut egui::Ui, chat: &Chat, palette: &Palette
     }
     let now = crate::util::now();
     if chat.muted(now) {
-        if widgets::menu_item(ui, palette, Some(Icon::Bell), &crate::i18n::gettext(locale, "Unmute")) {
+        if widgets::menu_item(
+            ui,
+            palette,
+            Some(Icon::Bell),
+            &crate::i18n::gettext(locale, "Unmute"),
+        ) {
             app.actions.push(Action::SetMuted(chat.id.clone(), None));
         }
     } else {
         for (label, until) in [
-            (crate::i18n::gettext(locale, "Mute for 8 hours"), Some(now + 8 * 3600)),
-            (crate::i18n::gettext(locale, "Mute for a week"), Some(now + 7 * 86_400)),
+            (
+                crate::i18n::gettext(locale, "Mute for 8 hours"),
+                Some(now + 8 * 3600),
+            ),
+            (
+                crate::i18n::gettext(locale, "Mute for a week"),
+                Some(now + 7 * 86_400),
+            ),
             (crate::i18n::gettext(locale, "Mute indefinitely"), Some(0)),
         ] {
             if widgets::menu_item(ui, palette, Some(Icon::BellOff), label.as_ref()) {

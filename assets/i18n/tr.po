@@ -1280,7 +1280,7 @@ msgstr "Son kullanılanlar"
 
 #: src/ui/picker.rs:1202
 msgid "Received"
-msgstr "Alındı"
+msgstr "Alınanlar"
 
 #: src/ui/picker.rs:1203
 msgid "Add stickers"
@@ -2306,7 +2306,7 @@ msgstr "Katılımcı ayrıntıları henüz mevcut değil"
 #: src/ui/polls.rs:310
 msgid "1 voter"
 msgid_plural "{count} voters"
-msgstr[0] "1 kişi"
+msgstr[0] "{count} kişi"
 msgstr[1] "{count} kişi"
 
 #: src/ui/polls.rs:499

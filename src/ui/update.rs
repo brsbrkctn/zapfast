@@ -79,12 +79,15 @@ pub fn show(app: &mut App, ctx: &egui::Context) {
                         ui.add_space(6.0);
                         theme::text(
                             ui,
-                            fastframe_i18n::gettext!(
-                                locale,
-                                "{received} of {total} MB",
-                                received = format!("{:.1}", *received as f64 / 1_000_000.0),
-                                total = format!("{:.1}", *total as f64 / 1_000_000.0)
-                            ),
+                            crate::i18n::gettext(locale, "{received} of {total} MB")
+                                .replace(
+                                    "{received}",
+                                    &format!("{:.1}", *received as f64 / 1_000_000.0),
+                                )
+                                .replace(
+                                    "{total}",
+                                    &format!("{:.1}", *total as f64 / 1_000_000.0),
+                                ),
                             theme::regular(12.0),
                             palette.secondary,
                         );
