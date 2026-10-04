@@ -577,10 +577,7 @@ pub fn results(app: &mut App, ui: &mut egui::Ui, chat: &str, id: &str) {
                 if voters.len() < count {
                     theme::text(
                         ui,
-                        crate::i18n::gettext(
-                            locale,
-                            "Participant details are not available yet",
-                        ),
+                        crate::i18n::gettext(locale, "Participant details are not available yet"),
                         theme::regular(12.0),
                         palette.secondary,
                     );
