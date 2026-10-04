@@ -4007,7 +4007,8 @@ fn context_menu(ui: &mut egui::Ui, view: &View<'_>, message: &Message, actions: 
                 line.paint(ui, rect.center() - line.size() / 2.0, palette.text);
                 let response = response.on_hover_cursor(egui::CursorIcon::PointingHand);
                 let response = if chosen {
-                    response.on_hover_text(crate::i18n::gettext(view.locale, "Remove your reaction"))
+                    response
+                        .on_hover_text(crate::i18n::gettext(view.locale, "Remove your reaction"))
                 } else {
                     response
                 };
@@ -7093,7 +7094,7 @@ fn selection_bar(app: &mut App, ui: &mut egui::Ui, chat: &str, selected: &[Strin
             app.locale,
             "1 selected",
             "{count} selected",
-            selected.len() as u64,
+            selected.len() as u32,
         )
         .replace("{count}", &selected.len().to_string());
         theme::text(ui, &count, theme::medium(14.5), palette.text);

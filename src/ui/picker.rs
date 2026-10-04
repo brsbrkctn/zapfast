@@ -440,7 +440,7 @@ fn reaction_picker(app: &mut App, ctx: &egui::Context) {
                             ui.horizontal(|ui| {
                                 theme::text(
                                     ui,
-                                    &crate::i18n::gettext(app.locale, "React to message"),
+                                    crate::i18n::gettext(app.locale, "React to message"),
                                     theme::semibold(13.0),
                                     palette.text,
                                 );
@@ -629,6 +629,7 @@ fn emoji_grid(
         })
         .flatten();
     let submit = search_active && take_plain_key(ui, Key::Enter);
+    let mut search = app.picker_search.clone();
     let response = search_box(
         ui,
         palette,
