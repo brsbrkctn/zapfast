@@ -161,7 +161,7 @@ fn body(app: &mut App, ui: &mut egui::Ui) {
                     ui,
                     palette.accent,
                     &crate::i18n::gettext(locale, "Requesting a code for +{phone}…")
-                        .replace("{phone}", phone),
+                        .replace("{phone}", &phone),
                 );
             } else if let Some(qr) = qr {
                 qr_view(app, ui, &qr);

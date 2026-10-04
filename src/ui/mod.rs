@@ -232,7 +232,7 @@ fn drop_target(app: &mut App, ctx: &egui::Context) {
                         theme::text(
                             ui,
                             crate::i18n::gettext(app.locale, "Drop to send to {name}")
-                                .replace("{name}", name),
+                                .replace("{name}", &name),
                             theme::semibold(15.0),
                             palette.text,
                         );
@@ -280,7 +280,7 @@ fn banner(app: &mut App, ui: &mut egui::Ui) {
         LinkStatus::Disconnected { reason } => (
             Icon::WifiOff,
             crate::i18n::gettext(locale, "Offline ({reason}). Reconnecting…")
-                .replace("{reason}", reason),
+                .replace("{reason}", &reason),
             palette.warning,
             true,
             None,
