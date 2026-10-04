@@ -1838,7 +1838,8 @@ fn chat_info(app: &mut App, ui: &mut egui::Ui, id: &str) {
             let mut submit = false;
             ui.horizontal(|ui| {
                 ui.add_space((ui.available_width() - 288.0).max(0.0) / 2.0);
-                let name_field = |ui: &mut egui::Ui, buffer: &mut String, salt: &str, hint: &str| {
+                let name_field =
+                    |ui: &mut egui::Ui, buffer: &mut String, salt: &str, hint: &str| {
                     let format = egui::TextFormat::simple(theme::semibold(15.0), palette.text);
                     let mut layouter = |ui: &egui::Ui, text: &dyn egui::TextBuffer, wrap: f32| {
                         crate::bidi::layout_field(ui, text.as_str(), &format, wrap)
