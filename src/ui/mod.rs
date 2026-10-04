@@ -280,7 +280,7 @@ fn banner(app: &mut App, ui: &mut egui::Ui) {
         LinkStatus::Disconnected { reason } => (
             Icon::WifiOff,
             crate::i18n::gettext(locale, "Offline ({reason}). Reconnecting…")
-                .replace("{reason}", &reason),
+                .replace("{reason}", reason),
             palette.warning,
             true,
             None,

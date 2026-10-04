@@ -933,20 +933,20 @@ pub fn localize_summary(locale: crate::i18n::Locale, summary: &str) -> String {
         }
     }
 
-    if let Some(rest) = summary.strip_prefix("Voice message (") {
-        if rest.ends_with(')') {
-            return format!("{} ({rest}", gettext(locale, "Voice message"));
-        }
+    if let Some(rest) = summary.strip_prefix("Voice message (")
+        && rest.ends_with(')')
+    {
+        return format!("{} ({rest}", gettext(locale, "Voice message"));
     }
-    if let Some(rest) = summary.strip_prefix("Audio (") {
-        if rest.ends_with(')') {
-            return format!("{} ({rest}", gettext(locale, "Audio"));
-        }
+    if let Some(rest) = summary.strip_prefix("Audio (")
+        && rest.ends_with(')')
+    {
+        return format!("{} ({rest}", gettext(locale, "Audio"));
     }
-    if let Some(rest) = summary.strip_prefix("Unsupported message (") {
-        if rest.ends_with(')') {
-            return format!("{} ({rest}", gettext(locale, "Unsupported message"));
-        }
+    if let Some(rest) = summary.strip_prefix("Unsupported message (")
+        && rest.ends_with(')')
+    {
+        return format!("{} ({rest}", gettext(locale, "Unsupported message"));
     }
 
     summary.to_owned()
