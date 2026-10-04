@@ -8,11 +8,12 @@ use egui::{Align, Layout, Sense, Stroke, pos2, vec2};
 
 pub fn create(app: &mut App, ui: &mut egui::Ui, chat: &str) {
     let palette = app.palette;
+    let locale = app.locale;
     ui.horizontal(|ui| {
         theme::icon(ui, Icon::ListChecks, 20.0, palette.accent);
         theme::text(
             ui,
-            crate::i18n::gettext(app.locale, "Create poll"),
+            crate::i18n::gettext(locale, "Create poll"),
             theme::bold(18.0),
             palette.text,
         );
@@ -23,7 +24,7 @@ pub fn create(app: &mut App, ui: &mut egui::Ui, chat: &str) {
                 16.0,
                 palette.secondary,
                 palette.text,
-                &crate::i18n::gettext(app.locale, "Close"),
+                &crate::i18n::gettext(locale, "Close"),
             )
             .clicked()
             {
@@ -35,7 +36,7 @@ pub fn create(app: &mut App, ui: &mut egui::Ui, chat: &str) {
     ui.add_enabled_ui(!app.poll_creating, |ui| {
         theme::text(
             ui,
-            crate::i18n::gettext(app.locale, "Question"),
+            crate::i18n::gettext(locale, "Question"),
             theme::medium(13.5),
             palette.secondary,
         );
@@ -48,10 +49,11 @@ pub fn create(app: &mut App, ui: &mut egui::Ui, chat: &str) {
         } else {
             Align::LEFT
         };
+        let question_hint = crate::i18n::gettext(locale, "Ask a question");
         ui.add(
             egui::TextEdit::singleline(&mut app.poll_draft.question)
                 .id_salt("poll-question")
-                .hint_text(crate::i18n::gettext(app.locale, "Ask a question"))
+                .hint_text(question_hint)
                 .char_limit(255)
                 .font(theme::regular(14.0))
                 .desired_width(f32::INFINITY)
@@ -61,7 +63,7 @@ pub fn create(app: &mut App, ui: &mut egui::Ui, chat: &str) {
         ui.add_space(8.0);
         theme::text(
             ui,
-            crate::i18n::gettext(app.locale, "Answers"),
+            crate::i18n::gettext(locale, "Answers"),
             theme::medium(13.5),
             palette.secondary,
         );
@@ -85,7 +87,7 @@ pub fn create(app: &mut App, ui: &mut egui::Ui, chat: &str) {
                         } else {
                             Align::LEFT
                         };
-                        let answer_hint = crate::i18n::gettext(app.locale, "Answer {index}")
+                        let answer_hint = crate::i18n::gettext(locale, "Answer {index}")
                             .replace("{index}", &(index + 1).to_string());
                         ui.add(
                             egui::TextEdit::singleline(answer)
@@ -104,7 +106,7 @@ pub fn create(app: &mut App, ui: &mut egui::Ui, chat: &str) {
                                 14.0,
                                 palette.dim,
                                 palette.text,
-                                &crate::i18n::gettext(app.locale, "Remove answer"),
+                                &crate::i18n::gettext(locale, "Remove answer"),
                             )
                             .clicked()
                         {
@@ -121,7 +123,7 @@ pub fn create(app: &mut App, ui: &mut egui::Ui, chat: &str) {
                 ui,
                 &palette,
                 Some(Icon::Plus),
-                &crate::i18n::gettext(app.locale, "Add answer"),
+                &crate::i18n::gettext(locale, "Add answer"),
                 false,
             )
             .clicked()
@@ -133,7 +135,7 @@ pub fn create(app: &mut App, ui: &mut egui::Ui, chat: &str) {
             widgets::switch(ui, &palette, &mut app.poll_draft.multiple);
             theme::text(
                 ui,
-                crate::i18n::gettext(app.locale, "Allow multiple answers"),
+                crate::i18n::gettext(locale, "Allow multiple answers"),
                 theme::regular(13.5),
                 palette.text,
             );
@@ -149,7 +151,7 @@ pub fn create(app: &mut App, ui: &mut egui::Ui, chat: &str) {
             ui,
             &palette,
             None,
-            &crate::i18n::gettext(app.locale, "Cancel"),
+            &crate::i18n::gettext(locale, "Cancel"),
             false,
         )
         .clicked()
@@ -160,9 +162,9 @@ pub fn create(app: &mut App, ui: &mut egui::Ui, chat: &str) {
             valid.is_ok() && !app.poll_creating && app.link.is_connected(),
             |ui| {
                 let button_label = if app.poll_creating {
-                    crate::i18n::gettext(app.locale, "Sending…")
+                    crate::i18n::gettext(locale, "Sending…")
                 } else {
-                    crate::i18n::gettext(app.locale, "Send poll")
+                    crate::i18n::gettext(locale, "Send poll")
                 };
                 if theme::pill_button(ui, &palette, &button_label, true).clicked() {
                     app.actions.push(Action::CreatePoll {
@@ -447,10 +449,11 @@ pub fn results_button(
 
 pub fn results(app: &mut App, ui: &mut egui::Ui, chat: &str, id: &str) {
     let palette = app.palette;
+    let locale = app.locale;
     ui.horizontal(|ui| {
         theme::text(
             ui,
-            crate::i18n::gettext(app.locale, "Poll results"),
+            crate::i18n::gettext(locale, "Poll results"),
             theme::semibold(18.0),
             palette.text,
         );
@@ -461,7 +464,7 @@ pub fn results(app: &mut App, ui: &mut egui::Ui, chat: &str, id: &str) {
                 16.0,
                 palette.secondary,
                 palette.text,
-                &crate::i18n::gettext(app.locale, "Close"),
+                &crate::i18n::gettext(locale, "Close"),
             )
             .clicked()
             {
@@ -477,7 +480,7 @@ pub fn results(app: &mut App, ui: &mut egui::Ui, chat: &str, id: &str) {
     else {
         widgets::rich_text(
             ui,
-            &crate::i18n::gettext(app.locale, "This poll is no longer available."),
+            &crate::i18n::gettext(locale, "This poll is no longer available."),
             theme::regular(14.0),
             palette.secondary,
         );
@@ -497,7 +500,7 @@ pub fn results(app: &mut App, ui: &mut egui::Ui, chat: &str, id: &str) {
         widgets::rich_text(
             ui,
             &crate::i18n::gettext(
-                app.locale,
+                locale,
                 "Earlier votes may still be missing. Results update as they arrive.",
             ),
             theme::regular(12.0),
@@ -530,7 +533,7 @@ pub fn results(app: &mut App, ui: &mut egui::Ui, chat: &str, id: &str) {
                     label.paint(ui, rect.min, palette.text);
                     theme::text(
                         ui,
-                        crate::i18n::ngettext(app.locale, "1 vote", "{count} votes", count as u32)
+                        crate::i18n::ngettext(locale, "1 vote", "{count} votes", count as u32)
                             .replace("{count}", &count.to_string()),
                         theme::regular(12.0),
                         palette.secondary,
@@ -564,7 +567,7 @@ pub fn results(app: &mut App, ui: &mut egui::Ui, chat: &str, id: &str) {
                             widgets::rich_text(ui, &voter.name, theme::regular(14.0), palette.text);
                             theme::text(
                                 ui,
-                                crate::util::moment_stamp(app.locale, voter.timestamp),
+                                crate::util::moment_stamp(locale, voter.timestamp),
                                 theme::regular(12.0),
                                 palette.secondary,
                             );
@@ -575,7 +578,7 @@ pub fn results(app: &mut App, ui: &mut egui::Ui, chat: &str, id: &str) {
                     theme::text(
                         ui,
                         crate::i18n::gettext(
-                            app.locale,
+                            locale,
                             "Participant details are not available yet",
                         ),
                         theme::regular(12.0),
