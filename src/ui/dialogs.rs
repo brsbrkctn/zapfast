@@ -1257,7 +1257,7 @@ fn confirm_delete_message(
             crate::i18n::gettext(app.locale, "Delete for me?"),
             crate::i18n::gettext(
                 app.locale,
-                "This removes the message from this computer. Other people keep their copy. Your phone will not send it again, so it cannot be undone.",
+                "This removes the message from your phone and linked devices. Other people keep their copy. Connect to WhatsApp to delete it. This cannot be undone.",
             ),
         )
     };
