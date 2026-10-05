@@ -95,7 +95,7 @@ fn receipts(app: &mut App, ui: &mut egui::Ui, chat: &str, id: &str, message: &Me
 
 /// The message as its bubble shows it, shortened to a few lines.
 fn preview(ui: &mut egui::Ui, palette: &Palette, message: &Message, locale: crate::i18n::Locale) {
-    let summary = crate::model::localize_summary(locale, &message.content.summary());
+    let summary = message.localized_summary(locale);
     let text = widgets::line(
         ui,
         &summary,

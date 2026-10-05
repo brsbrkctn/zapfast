@@ -455,7 +455,6 @@ msgid "Cancel"
 msgstr "İptal"
 
 #: src/ui/dialogs.rs:1178
-#, fuzzy
 msgid "Remove this account?"
 msgstr "Bu hesap kaldırılsın mı?"
 

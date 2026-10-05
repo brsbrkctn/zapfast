@@ -1602,7 +1602,7 @@ fn reply_strip(app: &mut App, ui: &mut egui::Ui, quoted: &Message) {
         app.display_name_or(&quoted.sender, quoted.sender_name.as_deref())
     };
     let summary = markup::plain(
-        &app.localize_summary(&quoted.summary()),
+        &quoted.localized_summary(app.locale),
         &app.mention_list(quoted),
     );
     let strip = widgets::raised(ui, &palette, strip_frame(&palette), |ui| {
@@ -3525,7 +3525,7 @@ fn quote_block(
     } else {
         (view.names_or)(&quoted.sender, quoted.sender_name.as_deref())
     };
-    let localized_summary = crate::model::localize_summary(view.locale, &quoted.summary);
+    let localized_summary = quoted.localized_summary(view.locale);
     let summary = markup::plain(&localized_summary, &quote_mentions(view, quoted));
     // As in WhatsApp, the bar and name take the quoted sender's colour, the
     // one their name has in groups, kept readable on this bubble.
