@@ -417,7 +417,7 @@ fn reaction_picker(app: &mut App, ctx: &egui::Context) {
         .conversations
         .get(&chat)
         .and_then(|conversation| conversation.message(&message))
-        .map(|message| (app.display_name(&message.sender), message.content.summary()));
+        .map(|message| (app.display_name(&message.sender), message.localized_summary(app.locale)));
     let area = egui::Area::new(egui::Id::new("reaction-picker"))
         .fixed_pos(pos)
         .order(egui::Order::Foreground)
@@ -462,7 +462,7 @@ fn reaction_picker(app: &mut App, ctx: &egui::Context) {
                             if let Some((name, summary)) = &preview {
                                 let line = widgets::line(
                                     ui,
-                                    &format!("{name}: {}", app.localize_summary(summary)),
+                                    &format!("{name}: {summary}"),
                                     theme::regular(12.0),
                                     palette.secondary,
                                     width,

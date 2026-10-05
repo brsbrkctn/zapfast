@@ -191,7 +191,27 @@ pub struct LastMessage {
     /// The whole message behind `summary`, every line of it: the chat row
     /// shows it in a tooltip when the one-line preview cannot.
     pub full: String,
+    /// Whether this represents plain text rather than a media/placeholder label.
+    pub is_text: bool,
     pub status: Delivery,
+}
+
+impl LastMessage {
+    pub fn localized_summary(&self, locale: crate::i18n::Locale) -> String {
+        if self.is_text {
+            self.summary.clone()
+        } else {
+            localize_summary(locale, &self.summary)
+        }
+    }
+
+    pub fn localized_full(&self, locale: crate::i18n::Locale) -> String {
+        if self.is_text {
+            self.full.clone()
+        } else {
+            localize_summary(locale, &self.full)
+        }
+    }
 }
 
 impl Chat {
@@ -364,9 +384,26 @@ pub struct LinkPreview {
 }
 
 impl Message {
+    /// Whether this message has text content rather than media or placeholder.
+    pub fn is_text(&self) -> bool {
+        self.content.is_text()
+    }
+
     /// One-line summary used in chat rows and quotes.
     pub fn summary(&self) -> String {
         self.content.summary()
+    }
+
+    /// One-line summary in the reader's language. Text messages retain the
+    /// sender's original text without localization; media and placeholders
+    /// return their translated label.
+    pub fn localized_summary(&self, locale: crate::i18n::Locale) -> String {
+        self.content.localized_summary(locale)
+    }
+
+    /// The whole message in the reader's language.
+    pub fn localized_full_summary(&self, locale: crate::i18n::Locale) -> String {
+        self.content.localized_full_summary(locale)
     }
 
     /// The line of this message that contains `query`, for a search result's
@@ -383,9 +420,22 @@ pub struct Quoted {
     pub sender: String,
     pub sender_name: Option<String>,
     pub summary: String,
+    /// Whether this quote represents plain text rather than a media/placeholder label.
+    #[serde(default)]
+    pub is_text: bool,
     /// Mentions in quoted text.
     #[serde(default)]
     pub mentions: Vec<MentionRef>,
+}
+
+impl Quoted {
+    pub fn localized_summary(&self, locale: crate::i18n::Locale) -> String {
+        if self.is_text {
+            self.summary.clone()
+        } else {
+            localize_summary(locale, &self.summary)
+        }
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -716,6 +766,118 @@ impl Content {
         }
     }
 
+    /// Whether this content is plain or formatted text written by the sender.
+    pub fn is_text(&self) -> bool {
+        matches!(self, Self::Text { .. } | Self::Interactive { .. })
+    }
+
+    /// One-line summary in the reader's language. Sender-written text is
+    /// preserved without modification; media and system labels are localized.
+    pub fn localized_summary(&self, locale: crate::i18n::Locale) -> String {
+        use crate::i18n::gettext;
+        match self {
+            Self::Text { text, .. } | Self::Interactive { text, .. } => {
+                text.lines().next().unwrap_or_default().to_owned()
+            }
+            Self::Image { caption, .. } => {
+                with_caption(&gettext(locale, "Photo"), caption)
+            }
+            Self::Video {
+                caption,
+                gif,
+                note,
+                ..
+            } => {
+                let label = localized_video_label(locale, *gif, *note);
+                with_caption(&label, caption)
+            }
+            Self::Audio {
+                voice_note,
+                seconds,
+                ..
+            } => {
+                let label = if *voice_note {
+                    gettext(locale, "Voice message")
+                } else {
+                    gettext(locale, "Audio")
+                };
+                match seconds {
+                    Some(seconds) => format!("{label} ({})", crate::util::duration(*seconds)),
+                    None => label.into_owned(),
+                }
+            }
+            Self::Document { file_name, .. } => {
+                format!("{}: {file_name}", gettext(locale, "Document"))
+            }
+            Self::Sticker { .. } => gettext(locale, "Sticker").into_owned(),
+            Self::StickerPack { name, .. } => {
+                format!("{}: {name}", gettext(locale, "Sticker pack"))
+            }
+            Self::Location { name, .. } => match name {
+                Some(name) => format!("{}: {name}", gettext(locale, "Location")),
+                None => gettext(locale, "Location").into_owned(),
+            },
+            Self::LiveLocation { ended, .. } => {
+                if *ended {
+                    gettext(locale, "Live location ended").into_owned()
+                } else {
+                    gettext(locale, "Live location").into_owned()
+                }
+            }
+            Self::Contact { display_name, .. } => {
+                format!("{}: {display_name}", gettext(locale, "Contact"))
+            }
+            Self::Poll { question, .. } => {
+                format!("{}: {question}", gettext(locale, "Poll"))
+            }
+            Self::Revoked => gettext(locale, "This message was deleted").into_owned(),
+            Self::Unsupported { what } => {
+                format!("{} ({what})", gettext(locale, "Unsupported message"))
+            }
+            Self::PhoneOnly {
+                live_location: true,
+                ..
+            } => gettext(locale, "Live location").into_owned(),
+            Self::PhoneOnly {
+                once: Some(kind), ..
+            } => match kind {
+                OnceMedia::Photo => gettext(locale, "View once photo").into_owned(),
+                OnceMedia::Video => gettext(locale, "View once video").into_owned(),
+                OnceMedia::Voice => gettext(locale, "View once voice message").into_owned(),
+                OnceMedia::Audio => gettext(locale, "View once audio").into_owned(),
+            },
+            Self::PhoneOnly {
+                view_once: true, ..
+            } => gettext(locale, "View once message").into_owned(),
+            Self::PhoneOnly { .. } => gettext(locale, "Message on your phone").into_owned(),
+        }
+    }
+
+    /// The whole message as [`Self::localized_summary`] would label it:
+    /// every line of a text or a photo or video caption.
+    pub fn localized_full_summary(&self, locale: crate::i18n::Locale) -> String {
+        let captioned = |label: &str, caption: &Option<String>| match caption.as_deref() {
+            Some(caption) if !caption.trim().is_empty() => format!("{label}: {caption}"),
+            _ => label.to_owned(),
+        };
+        match self {
+            Self::Text { text, .. } | Self::Interactive { text, .. } => text.clone(),
+            Self::Image { caption, .. } => {
+                captioned(&crate::i18n::gettext(locale, "Photo"), caption)
+            }
+            Self::Video {
+                caption,
+                gif,
+                note,
+                ..
+            } => {
+                let label = localized_video_label(locale, *gif, *note);
+                captioned(&label, caption)
+            }
+            _ => self.localized_summary(locale),
+        }
+    }
+
     /// The whole message as [`Self::summary`] would label it: every line of
     /// a text or a photo or video caption. Other content has nothing more
     /// to say than its summary.
@@ -876,6 +1038,20 @@ fn video_label(gif: bool, note: bool) -> &'static str {
     }
 }
 
+fn localized_video_label(
+    locale: crate::i18n::Locale,
+    gif: bool,
+    note: bool,
+) -> std::borrow::Cow<'static, str> {
+    if gif {
+        "GIF".into()
+    } else if note {
+        crate::i18n::gettext(locale, "Video message")
+    } else {
+        crate::i18n::gettext(locale, "Video")
+    }
+}
+
 fn with_caption(label: &str, caption: &Option<String>) -> String {
     match caption
         .as_deref()
@@ -889,6 +1065,11 @@ fn with_caption(label: &str, caption: &Option<String>) -> String {
 /// Translates message summary labels (e.g. "Photo", "Video", "Voice message",
 /// etc.) into the reader's language. If the summary carries a caption or detail,
 /// the label prefix is translated while the rest is preserved.
+///
+/// Restricted to non-text content summaries: callers with access to a
+/// [`Content`], [`Message`], [`LastMessage`], or [`Quoted`] should use their
+/// respective `localized_summary` methods so sender-written text (e.g. a
+/// message saying "Photo" or "Poll: Friday?") is never translated as a label.
 pub fn localize_summary(locale: crate::i18n::Locale, summary: &str) -> String {
     use crate::i18n::gettext;
     if summary.is_empty() {

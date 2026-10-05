@@ -1591,7 +1591,7 @@ msgstr "單次檢視訊息"
 
 #: src/model.rs:910
 msgid "Message on your phone"
-msgstr "在手機上傳送訊息"
+msgstr "手機上的訊息"
 
 #: src/model.rs:920
 msgid "Document"

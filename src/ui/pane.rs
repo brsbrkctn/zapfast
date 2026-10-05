@@ -561,7 +561,7 @@ fn hit_row(
     // the whole text, so a hit on a later line would otherwise preview a first
     let line = hit
         .text_matching(query)
-        .unwrap_or_else(|| app.localize_summary(&hit.summary()));
+        .unwrap_or_else(|| hit.localized_summary(app.locale));
     let line = app.preview_line(&line, hit);
     let (snippet, found) = snippet(&line, query);
     let who = if hit.from_me {

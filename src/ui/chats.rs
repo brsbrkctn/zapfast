@@ -847,7 +847,7 @@ fn hit_row(app: &mut App, ui: &mut egui::Ui, hit: &Message) {
         }
         let words = widgets::line(
             ui,
-            &app.preview_line(&app.localize_summary(&hit.summary()), hit),
+            &app.preview_line(&hit.localized_summary(app.locale), hit),
             theme::regular(13.0),
             palette.dim,
             (right - x).max(0.0),
@@ -1108,7 +1108,7 @@ fn row(app: &mut App, ui: &mut egui::Ui, chat: &Chat) -> egui::Response {
                 sender.paint(ui, pos2(x, line_y), preview_color);
                 x += width;
             }
-            let summary = app.localize_summary(&last.summary);
+            let summary = last.localized_summary(app.locale);
             let words = widgets::line(
                 ui,
                 &crate::markup::plain(&app.resolve_mention_tokens(&summary), &[]),
@@ -1124,7 +1124,7 @@ fn row(app: &mut App, ui: &mut egui::Ui, chat: &Chat) -> egui::Response {
                     pos2(left, line_y - 4.0),
                     pos2(badge_right, line_y + words.size().y.max(16.0) + 4.0),
                 );
-                full_preview = Some((area, prefix, app.localize_summary(&last.full)));
+                full_preview = Some((area, prefix, last.localized_full(app.locale)));
             }
             words
         } else {

@@ -2015,6 +2015,7 @@ impl App {
     }
 
     /// Localizes preview summary labels into the current interface language.
+    /// Restricted to summaries known to represent non-text content.
     pub fn localize_summary(&self, summary: &str) -> String {
         crate::model::localize_summary(self.locale, summary)
     }
@@ -2025,7 +2026,7 @@ impl App {
             Content::Text { text, .. } | Content::Interactive { text, .. } => {
                 crate::markup::plain(text, &self.mention_list(message))
             }
-            _ => self.preview_line(&self.localize_summary(&message.summary()), message),
+            _ => self.preview_line(&message.localized_summary(self.locale), message),
         }
     }
 
@@ -8638,6 +8639,7 @@ mod tests {
             sender: sender.into(),
             sender_name: None,
             summary: "earlier".into(),
+            is_text: true,
             mentions: Vec::new(),
         };
         let mut reply = plain.clone();
