@@ -3346,6 +3346,7 @@ fn bubble_frame(
             "Copy message ID",
             &crate::i18n::gettext(view.locale, "Open in system player"),
             &crate::i18n::gettext(view.locale, "Message info"),
+            &crate::i18n::gettext(view.locale, "Reload earlier messages"),
         ],
         true,
     )
@@ -4264,6 +4265,18 @@ fn context_menu(ui: &mut egui::Ui, view: &View<'_>, message: &Message, actions: 
             message: message.id.clone(),
         }));
     }
+    if widgets::menu_item_enabled(
+        ui,
+        &palette,
+        Some(Icon::Refresh),
+        &crate::i18n::gettext(view.locale, "Reload earlier messages"),
+        view.connected && !matches!(message.status, Delivery::Pending | Delivery::Failed),
+    ) {
+        actions.push(Action::ReloadHistory {
+            chat: chat.clone(),
+            message: message.id.clone(),
+        });
+    }
     // The id helps when looking a message up for a bug report.
     if widgets::menu_item(
         ui,
@@ -5090,6 +5103,7 @@ fn carousel_row(message: &Message, index: usize, card: &crate::model::Interactiv
         sender_name: message.sender_name.clone(),
         from_me: message.from_me,
         timestamp: message.timestamp,
+        history_order: message.history_order,
         content: Content::Interactive {
             text: card.body.clone(),
             card: None,
@@ -7430,6 +7444,7 @@ mod tests {
             read_at: None,
             quoted: None,
             reactions: Vec::new(),
+            history_order: None,
             edited: false,
             mentions: Vec::new(),
             forwarded: false,
@@ -7542,6 +7557,7 @@ mod reaction_tests {
             read_at: None,
             quoted: None,
             reactions,
+            history_order: None,
             edited: false,
             mentions: Vec::new(),
             forwarded: false,

@@ -234,44 +234,46 @@ pub(crate) struct RowHeight {
 
 impl Conversation {
     fn merge(&mut self, incoming: Vec<Message>, older: bool) {
-        if older {
-            let known: HashSet<String> = self.messages.iter().map(|m| m.id.clone()).collect();
-            let mut fresh: Vec<Message> = incoming
-                .into_iter()
-                .filter(|message| !known.contains(&message.id))
-                .collect();
-            fresh.append(&mut self.messages);
-            self.messages = fresh;
-        } else {
-            for message in incoming {
-                match self.messages.iter_mut().find(|m| m.id == message.id) {
-                    Some(existing) => {
-                        // A reload or scroll delivers a freshly classified copy
-                        // of an already-loaded message whose Media has no local
-                        // path and a default state. Replacing it would throw
-                        // away an in-flight download and re-fetch media already
-                        // on disk, so keep the runtime-only fields (as
-                        // `MessageUpdated` already does for the state).
-                        let media = existing
-                            .content
-                            .media()
-                            .map(|media| (media.state.clone(), media.path.clone()));
-                        *existing = message;
-                        // A copy that carries its own path is newer, for
-                        // example after the archive relocated the file.
-                        if let (Some((state, path)), Some(media)) =
-                            (media, existing.content.media_mut())
-                            && media.path.is_none()
-                        {
-                            media.state = state;
-                            media.path = path;
-                        }
+        // Prepend new older rows, but refresh duplicates too: on-demand
+        // history can supply edits and phone ordering absent from our archive.
+        let old_len = self.messages.len();
+        let mut positions: HashMap<String, usize> = self
+            .messages
+            .iter()
+            .enumerate()
+            .map(|(index, message)| (message.id.clone(), index))
+            .collect();
+        for message in incoming {
+            match positions.get(&message.id) {
+                Some(&index) => {
+                    let existing = &mut self.messages[index];
+                    let media = existing
+                        .content
+                        .media()
+                        .map(|media| (media.state.clone(), media.path.clone()));
+                    *existing = message;
+                    // Keep downloads in flight and files absent from a freshly
+                    // classified copy. An incoming path takes precedence.
+                    if let (Some((state, path)), Some(media)) =
+                        (media, existing.content.media_mut())
+                        && media.path.is_none()
+                    {
+                        media.state = state;
+                        media.path = path;
                     }
-                    None => self.messages.push(message),
+                }
+                None => {
+                    positions.insert(message.id.clone(), self.messages.len());
+                    self.messages.push(message);
                 }
             }
         }
-        self.messages.sort_by_key(|message| message.timestamp);
+        if older {
+            let added = self.messages.len() - old_len;
+            self.messages.rotate_right(added);
+        }
+        self.messages
+            .sort_by_key(|message| (message.timestamp, message.history_order.unwrap_or(i64::MAX)));
     }
 
     pub fn message_mut(&mut self, id: &str) -> Option<&mut Message> {
@@ -876,6 +878,9 @@ impl App {
             account
                 .backend
                 .send(Command::SetDownloadFolder(folder.clone()));
+            account.backend.send(Command::SetKeepChatsArchived(
+                app.settings.keep_chats_archived,
+            ));
         }
         if crate::autostart::supported() {
             app.start_with_system = Some(crate::autostart::enabled());
@@ -1295,6 +1300,9 @@ impl App {
         account.backend.send(Command::SetDownloadFolder(
             self.settings.download_folder.clone(),
         ));
+        account.backend.send(Command::SetKeepChatsArchived(
+            self.settings.keep_chats_archived,
+        ));
         self.account_before_adding = Some(self.account().id.clone());
         self.park_composer();
         self.clear_account_ui();
@@ -1628,6 +1636,9 @@ impl App {
         ctx.add_plugin(crate::emoji::plugin());
         crate::theme::set_font(ctx, self.settings.font);
         crate::theme::install(ctx);
+        // Zoom stays in the settings, so egui must not change it behind the
+        // app's back: the shortcuts below go through `Action::ZoomBy`.
+        ctx.options_mut(|options| options.zoom_with_keyboard = false);
         // A keystroke that wraps the draft is applied in one pass, and the
         // bottom panel holding the composer only takes the new height in
         // the next: three passes keep it from showing a frame out of place.
@@ -3922,6 +3933,14 @@ impl App {
         }
     }
 
+    /// Remembers the window's size, position and maximized state in the
+    /// settings; see [`crate::window::Snapshot`].
+    fn sync_window_state(&mut self, ctx: &egui::Context) {
+        if crate::window::Snapshot::read(ctx).remember(&mut self.settings) {
+            self.mark_settings_dirty();
+        }
+    }
+
     pub fn load_custom_themes(&mut self) {
         let waker = self.waker.clone();
         self.custom_themes.start(
@@ -4246,6 +4265,25 @@ impl App {
             Action::MarkUnread(chat) => self.mark_unread(&chat),
             Action::LoadOlder { chat, explicit } => self.load_older(&chat, explicit),
             Action::FetchOlder(chat) => self.fetch_older(&chat, true),
+            Action::ReloadHistory { chat, message } => {
+                if !self.is_connected() {
+                    return;
+                }
+                let Some(conversation) = self.conversations.get_mut(&chat) else {
+                    return;
+                };
+                if conversation.fetching_phone {
+                    self.toast("History is already being requested for this chat");
+                    return;
+                }
+                if conversation.message(&message).is_none() {
+                    return;
+                }
+                conversation.fetching_phone = true;
+                conversation.phone_explicit = true;
+                self.backend.send(Command::ReloadHistory { chat, message });
+                self.toast("Requesting earlier messages from your phone");
+            }
             Action::Download {
                 card,
                 chat,
@@ -4540,9 +4578,6 @@ impl App {
                 self.backend.send(Command::Revoke { chat, id });
             }
             Action::DeleteForMe { chat, id } => {
-                if let Some(conversation) = self.conversations.get_mut(&chat) {
-                    conversation.messages.retain(|message| message.id != id);
-                }
                 self.backend.send(Command::DeleteLocal { chat, id });
             }
             Action::Attach => {
@@ -5474,6 +5509,13 @@ impl App {
                         .send(Command::SetDownloadFolder(folder.clone()));
                 }
             }
+            Action::SetKeepChatsArchived(keep) => {
+                self.settings.keep_chats_archived = keep;
+                self.mark_settings_dirty();
+                for account in &self.accounts {
+                    account.backend.send(Command::SetKeepChatsArchived(keep));
+                }
+            }
             Action::SetProxy(value) => {
                 let value = value.trim().to_owned();
                 if value == self.settings.proxy {
@@ -6144,6 +6186,7 @@ impl App {
             .lock()
             .unwrap_or_else(|p| p.into_inner()) = None;
         self.apply_theme(ctx);
+        self.sync_window_state(ctx);
         if ctx.input(|input| input.events.iter().any(is_user_input)) {
             self.app_lock.note_input();
         }
@@ -6772,6 +6815,12 @@ mod tests {
             )),
             "the hidden account downloads there too"
         );
+        app.apply(Action::SetKeepChatsArchived(false), &ctx);
+        assert!(
+            std::iter::from_fn(|| commands.try_recv().ok())
+                .any(|command| matches!(command, Command::SetKeepChatsArchived(false))),
+            "the hidden account unarchives on new messages too"
+        );
     }
 
     #[test]
@@ -7011,6 +7060,17 @@ mod tests {
         assert!(app.badge.is_none());
         #[cfg(target_os = "windows")]
         assert!(app.taskbar_badge_count().is_none());
+    }
+
+    /// Window geometry syncing lives in `window::tests`: this frame only
+    /// forwards the snapshot and marks the settings dirty.
+    #[test]
+    fn sync_window_state_marks_the_settings_dirty_on_change() {
+        let mut app = app();
+        let ctx = egui::Context::default();
+        // A headless context carries no viewport, so nothing is remembered.
+        app.sync_window_state(&ctx);
+        assert!(!app.settings_dirty);
     }
 
     /// A short chat asks the phone by itself; only the reader scrolling to
@@ -9262,6 +9322,7 @@ mod tests {
             read_at: None,
             quoted: None,
             reactions: Vec::new(),
+            history_order: None,
             edited: false,
             mentions: Vec::new(),
             forwarded: false,
@@ -9302,6 +9363,7 @@ mod tests {
         // A reload delivers the same message freshly classified, without the
         // local path or the runtime state.
         conversation.merge(vec![image(None, MediaState::Idle)], false);
+        conversation.merge(vec![image(None, MediaState::Idle)], true);
         let media = conversation
             .message("picture")
             .and_then(|message| message.content.media().cloned())
@@ -10057,6 +10119,39 @@ mod tests {
             app.media_of(chat, "picture").map(|media| &media.state),
             Some(MediaState::Failed(_))
         ));
+    }
+
+    #[test]
+    fn history_fidelity_reload_repairs_loaded_order_and_content() {
+        let mut conversation = Conversation::default();
+        conversation.merge(
+            vec![message("c", "third", 100), message("c", "first", 100)],
+            false,
+        );
+        let refreshed = [("second", 2), ("first", 1), ("third", 3)]
+            .into_iter()
+            .map(|(id, order)| Message {
+                history_order: Some(order),
+                content: Content::text(format!("updated {id}")),
+                edited: true,
+                ..message("c", id, 100)
+            })
+            .collect::<Vec<_>>();
+        conversation.merge(refreshed.clone(), true);
+        conversation.merge(refreshed, true);
+        assert_eq!(
+            conversation
+                .messages
+                .iter()
+                .map(|m| m.id.as_str())
+                .collect::<Vec<_>>(),
+            ["first", "second", "third"]
+        );
+        assert!(conversation.messages.iter().all(|m| m.edited));
+        assert_eq!(
+            conversation.messages[0].content,
+            Content::text("updated first")
+        );
     }
 
     #[test]
@@ -11484,6 +11579,7 @@ mod name_tests {
             read_at: None,
             quoted: None,
             reactions: Vec::new(),
+            history_order: None,
             edited: false,
             mentions: vec![MentionRef {
                 user: "15550001111".into(),
@@ -11597,6 +11693,7 @@ mod app_lock_tests {
             read_at: None,
             quoted: None,
             reactions: Vec::new(),
+            history_order: None,
             edited: false,
             mentions: Vec::new(),
             forwarded: false,
