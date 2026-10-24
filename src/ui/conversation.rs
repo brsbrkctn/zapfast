@@ -9804,7 +9804,7 @@ fn selection_bar(app: &mut App, ui: &mut egui::Ui, chat: &str, selected: &[Strin
         }
         let count = crate::i18n::ngettext(
             locale,
-            "1 selected",
+            "{count} selected",
             "{count} selected",
             selected.len() as u32,
         )

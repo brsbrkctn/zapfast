@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: ZapFast\n"
 "Report-Msgid-Bugs-To: https://github.com/crmne/zapfast/issues/new?"
 "template=translation.yml\n"
-"POT-Creation-Date: 2026-10-24 09:34+0200\n"
+"POT-Creation-Date: 2026-10-24 09:35+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -861,9 +861,9 @@ msgstr ""
 msgid "Cancel selection"
 msgstr ""
 
-#: src/ui/conversation.rs:9807
+#: src/ui/conversation.rs:9807 src/ui/new_group.rs:139
 #, rust-format
-msgid "1 selected"
+msgid "{count} selected"
 msgid_plural "{count} selected"
 msgstr[0] ""
 msgstr[1] ""
@@ -3225,13 +3225,6 @@ msgstr ""
 #: src/ui/new_group.rs:71
 msgid "Add group members"
 msgstr ""
-
-#: src/ui/new_group.rs:139
-#, rust-format
-msgid "{count} selected"
-msgid_plural "{count} selected"
-msgstr[0] ""
-msgstr[1] ""
 
 #: src/ui/new_group.rs:149
 msgctxt "add group members"
