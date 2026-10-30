@@ -2657,11 +2657,11 @@ msgstr "Emoji"
 
 #: src/ui/picker.rs:446
 msgid "React to message"
-msgstr "Mesaja ifade bırak"
+msgstr "Mesaja tepki ver"
 
 #: src/ui/picker.rs:457
 msgid "Close reactions"
-msgstr "İfadeleri kapat"
+msgstr "Tepkileri kapat"
 
 #: src/ui/picker.rs:636
 msgid "Search emoji"
@@ -3333,7 +3333,7 @@ msgstr "{name} kişisine göndermek için bırakın"
 #: src/ui/mod.rs:541
 #, rust-format
 msgid "Loading chat history… {percent}%"
-msgstr "Sohbet geçmişi yükleniyor… %{percent}"
+msgstr "Sohbet geçmişi yükleniyor… {percent}%"
 
 #: src/ui/mod.rs:544
 msgid "Loading chat history…"
@@ -3342,7 +3342,7 @@ msgstr "Sohbet geçmişi yükleniyor…"
 #: src/ui/mod.rs:554
 #, rust-format
 msgid "ZapFast {version} is available"
-msgstr "ZapFast {version} kullanıma hazır"
+msgstr "ZapFast {version} sürümü mevcut"
 
 #: src/ui/mod.rs:571
 #, rust-format
@@ -3441,15 +3441,15 @@ msgstr "Yeni üyeleri onayla"
 #: src/group_admin.rs:73
 msgid "Change the group's name, photo, description and disappearing messages."
 msgstr ""
-"Grubun adını, fotoğrafını, açıklamasını ve süreli mesajları değiştirme."
+"Grubun adını, fotoğrafını, açıklamasını ve süreli mesajları değiştirebilme."
 
 #: src/group_admin.rs:75
 msgid "Write in the group."
-msgstr "Grupta yazma."
+msgstr "Grupta yazabilme."
 
 #: src/group_admin.rs:76
 msgid "Add people to the group."
-msgstr "Gruba kişi ekleme."
+msgstr "Gruba kişi ekleyebilme."
 
 #: src/group_admin.rs:79
 msgid "When turned on, admins must approve anyone who wants to join."
@@ -3721,7 +3721,7 @@ msgstr "sabitlendi"
 #: src/a11y.rs:149
 #, rust-format
 msgid "reactions: {reactions}"
-msgstr "ifadeler: {reactions}"
+msgstr "tepkiler: {reactions}"
 
 #: src/a11y.rs:167
 #, rust-format
